@@ -2,7 +2,8 @@
 #define _PARSE_H_
 
 
-#include "../scaner of pyc/scanner.h"
+#include "../scanner_pyc/scanner.h"
+#include "libs.h"
 
 // No need for ARG_ND, since an argument is just an expression
 
@@ -78,16 +79,24 @@ typedef struct {
 }ParseResult;
 */
 
-typedef struct parser Parser;
+struct Parser; 
 
 /* Each function has a parameter p, that is a pointer to the parser itself, in order to use the resources belong to the parser */
-typedef struct parser{
-	TreeNode * (* parse)(Parser * p); /* returning a parse tree, based on the tokenList that the parser knows */
-	void (* set_token_list)(Parser * p, List tokenList); /* let the parser remember some tokenList */
-	void (* print_tree)(Parser * p,  TreeNode * tree); /* can print some parser tree */
-	void (* free_tree)(Parser *p, TreeNode * tree); /* free the space of a parse tree */
-	void * info; /* Some data belonging to this parser object. It can contain the tokenList that the parser knows. */
+typedef struct Parser {
+    TreeNode *(*parse)(struct Parser *p);
+    void (*set_token_list)(struct Parser *p, List tokenList);
+    void (*print_tree)(struct Parser *p, TreeNode *tree);
+    void (*free_tree)(struct Parser *p, TreeNode *tree);
+    void *info;
 } Parser;
+//typedef struct parser{
+	//TreeNode * (* parse)(Parser * p); /* returning a parse tree, based on the tokenList that the parser knows */
+	//void (* set_token_list)(Parser * p, List tokenList); /* let the parser remember some tokenList */
+	//void (* print_tree)(Parser * p,  TreeNode * tree); /* can print some parser tree */
+	//void (* free_tree)(Parser *p, TreeNode * tree); /* free the space of a parse tree */
+	//void * info; /* Some data belonging to this parser object. It can contain the tokenList that the parser knows. */
+//} Parser;
+
 
 
 typedef struct ParserInfo {
@@ -115,7 +124,7 @@ TreeNode *newNode(NodeKind nodeKind);
 void removeNode(TreeNode *node);
 Bool canStartDeclaration(TokenType t);
 Bool looksLikeFunDeclaration(ParserInfo *f);
-
+void skipNewlines(ParserInfo *info);
 
 // 语法规则解析函数
 TreeNode *declaration_list(ParserInfo *f, Bool *status);

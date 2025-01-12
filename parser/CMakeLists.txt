@@ -5,4 +5,5 @@ add_executable(parser
 )
 
 # 连接 scanner 和 semantic_analyzer 的静态库
-target_link_libraries(parser scanner semantic_analyzer)
+target_link_libraries(parser scanner)
+#target_link_libraries(parser scanner semantic_analyzer)

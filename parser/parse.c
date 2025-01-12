@@ -49,6 +49,10 @@ void free_tree(Parser *p, TreeNode *tree)
 Parser *createParser()
 {
     Parser *p = (Parser *)malloc(sizeof(Parser));
+    if (!p) {
+        fprintf(stderr, "Out of memory\n");
+        exit(1);
+    }
     p->parse = parse;
     p->set_token_list = set_token_list;
     p->free_tree = free_tree;
@@ -93,32 +97,46 @@ Bool moveTokenNext(ParserInfo *info)
 {
     if (info->currentTokenNode && info->currentTokenNode->next)
     {
-        info->currentTokenNode = info->currentTokenNode->next;
+        info->currentTokenNode = info->currentTokenNode->next;  // 移动到下一个 Node
         return TRUE;
     }
-    return FALSE;
+    return FALSE;  // 已经是最后一个节点
 } // 移动token链表的指针，指向下一个节点
-
+void skipNewlines(ParserInfo *info) {
+    while (currentToken(info) && currentToken(info)->type == NEWLINE) {
+        moveTokenNext(info);
+    }
+}
 Bool checkMove(ParserInfo *info, TokenType type)
 {
-    Token *t = info->currentTokenNode->t;
+    // 跳过 NEWLINE
+    while (info->currentTokenNode && info->currentTokenNode->t->type == NEWLINE)
+    {
+        info->currentTokenNode = info->currentTokenNode->next;
+    }
+
+    Token *t = info->currentTokenNode ? info->currentTokenNode->t : NULL;
     if (t && t->type == type)
     {
         if (info->currentTokenNode && info->currentTokenNode->next)
         {
             info->currentTokenNode = info->currentTokenNode->next;
+
+            // 再次跳过 NEWLINE
+            while (info->currentTokenNode && info->currentTokenNode->t->type == NEWLINE)
+            {
+                info->currentTokenNode = info->currentTokenNode->next;
+            }
+
             return TRUE;
         }
         else
         {
-            info->currentTokenNode = NULL;
+            info->currentTokenNode = NULL; // 已到最后一个 Token
             return TRUE;
-        } // last token
+        }
     }
-    else
-    {
-        return FALSE;
-    }
+    return FALSE;
 } // checkType+moveTokenNext，token类型匹配之后移动指针到下一个
 TreeNode *newNode(NodeKind nodeKind)
 {
@@ -216,19 +234,20 @@ TreeNode *parse_program(Parser *p)
     }
     return root;
 }
+/*declaration_list -> declaration_list declaration | declaration*/
 TreeNode *declaration_list(ParserInfo *f, Bool *status)
 {
-    TreeNode *result = newNode(DCL_ND);
+    TreeNode *result = NULL;
     Bool s;
+    skipNewlines(f); 
     TreeNode *firstDecl = declaration(f, &s);
     if (s == FALSE)
     {
         printf("Error: expected at least one declaration.\n");
-        removeNode(result);
         *status = FALSE;
         return NULL;
     }
-    result->child[0] = firstDecl;
+    result = firstDecl;
 
     TreeNode *currentNode = firstDecl;
     while (canStartDeclaration(currentToken(f)->type))
@@ -238,7 +257,6 @@ TreeNode *declaration_list(ParserInfo *f, Bool *status)
         {
             break;
         }
-        result->child[1] = nextDecl; // 有问题
         currentNode->rSibling = nextDecl;
         nextDecl->lSibling = currentNode;
         currentNode = nextDecl;

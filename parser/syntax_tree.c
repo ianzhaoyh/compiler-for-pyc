@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "./parse.h"
-#include "./parse.c"
 #include "../scanner_pyc/scanner.h"
 
 int main(int argc, char *argv[]) {
@@ -37,7 +36,7 @@ int main(int argc, char *argv[]) {
 
     //  打印语法树
     printf("\n==== Syntax Tree ====\n");
-    printSyntaxTree(syntaxTree, 0);
+    //printSyntaxTree(syntaxTree, 0);
 
     // 释放资源
     parser->free_tree(parser, syntaxTree);

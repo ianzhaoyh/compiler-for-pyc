@@ -5,6 +5,66 @@
 #include "scanner.h"
 #include "error_handler.h"
 
+const char *tokenTypeNames[] = {
+    "PLUS",
+    "MINUS",
+    "MUL",
+    "DIV",
+    "MOD",
+    "PPLUS",
+    "MMINUS",
+    "POWER",
+    "LT",
+    "GT",
+    "LTE",
+    "GTE",
+    "EQ",
+    "UNEQ",
+    "AAND",
+    "OR",
+    "OR1",
+    "NOT",
+    "ASSIGN",
+    "PLUS_ASSIGN",
+    "MINUS_ASSIGN",
+    "MUL_ASSIGN",
+    "DIV_ASSIGN",
+    "MOD_ASSIGN",
+    "POWER_ASSIGN",
+    "AND",
+    "LEFT_SHIFT",
+    "RIGHT_SHIFT",
+    "INT",
+    "FRAC",
+    "STR",
+    "VOID",
+    "ID",
+    "INTL",
+    "FRACL",
+    "STRL",
+    "LCUR",
+    "RCUR",
+    "LPAR",
+    "RPAR",
+    "LBRA",
+    "RBRA",
+    "NEWLINE",
+    "COLON",
+    "SEMI",
+    "COMMA",
+    "INDENT",
+    "COMMENT",
+    "DO",
+    "WHILE",
+    "FOR",
+    "DEF",
+    "RETURN",
+    "IN",
+    "IF",
+    "ELIF",
+    "ELSE",
+    "ERROR",
+    "END_OF_FILE"};
 void handleError(ErrorCode code, const char *details)
 {
     switch (code)
@@ -411,9 +471,9 @@ TokenType identifyTokenType(const char *token)
     if(strcmp(token,";")==0)
     return SEMI;
     if(strcmp(token,",")==0)
-    return COMMA;
-    if(strcmp(token,"#")==0||strcmp(token,"//")==0||strcmp(token,"/*")==0)
-    return COMMENT; */
+    return COMMA;*/
+   // if(strcmp(token,"#")==0||strcmp(token,"//")==0||strcmp(token,"/*")==0)
+    //return COMMENT; 
     if (isalpha(token[0]))
     {
         if (strcmp(token, "int") == 0)
@@ -501,35 +561,4 @@ List* scanFile(const char *filename) {
     fclose(file);                    // 关闭文件
 
     return tokenList;                // 返回链表指针
-}
-int main(int argc, char *argv[])
-{
-
-    if (argc < 2)
-    {
-        printf("Usage: %s <input file>\n", argv[0]);
-        return 1;
-    }
-    FILE *file = fopen(argv[1], "r");
-    if (file == NULL)
-    {
-        printf("Cannot open file %s\n", argv[1]);
-        return 1;
-    }
-    if (file == NULL)
-    {
-        handleError(ERR_FILE_OPEN_FAILED, argv[1]);
-        return 1;
-    }
-    List tokenList;
-    initList(&tokenList);
-
-    tokenizeFile(&tokenList, file);
-
-    printTokens(&tokenList);
-
-    fclose(file);
-    freeList(&tokenList);
-
-    return 0;
 }
