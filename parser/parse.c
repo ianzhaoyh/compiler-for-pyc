@@ -1,5 +1,5 @@
 #include "libs.h"
-#include "../scaner of pyc/scanner.h"
+#include "../scanner_pyc/scanner.h"
 #include "parse.h"
 #include "util.h"
 

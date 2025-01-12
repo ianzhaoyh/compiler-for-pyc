@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "./parse.h"
 #include "./parse.c"
-#include "../scaner of pyc/scanner.h"
+#include "../scanner_pyc/scanner.h"
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
