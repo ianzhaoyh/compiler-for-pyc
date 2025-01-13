@@ -36,7 +36,7 @@ void pause_msg(const char * msg){
  * A copy (a clone) of the input string str, including the ending '\0'. The space of the clone does not overlap with the space of str.
  * */
 char * string_clone(const char* str){
-  int i;
+  int i=0;
   int len = strlen(str);
   char * clone =(char *)malloc(len +1);
   while(i<len){

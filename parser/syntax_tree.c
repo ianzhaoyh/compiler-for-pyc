@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "./parse.h"
 #include "../scanner_pyc/scanner.h"
+#include "parse_print.h"
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -19,8 +20,13 @@ int main(int argc, char *argv[]) {
     }
     printf("Lexical analysis completed successfully.\n");
 
+    
+    printf("----- Token List -----\n");
+    printTokens(tokenList);  // 打印所有Token
+    printf("---------------------\n");
     //  创建 Parser
     Parser *parser = createParser();
+    printf("Parser created.\n");
     parser->set_token_list(parser, *tokenList);  // 传递链表内容
 
     // 语法分析：生成语法树
@@ -32,11 +38,12 @@ int main(int argc, char *argv[]) {
         free(tokenList);
         return 1;
     }
+
     printf("Parsing completed successfully.\n");
 
     //  打印语法树
     printf("\n==== Syntax Tree ====\n");
-    //printSyntaxTree(syntaxTree, 0);
+    print_tree(parser, syntaxTree);
 
     // 释放资源
     parser->free_tree(parser, syntaxTree);

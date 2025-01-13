@@ -103,7 +103,7 @@ void st_print(SymbolTable * st);
    If the parameter restart is TRUE, then the id of the symbol table is 0, otherwise,
    the id of the symbol table is accumulating (one plus the latest value ).
 */
-SymbolTable * st_initialize(Boolean restart);
+SymbolTable * st_initialize(Bool restart);
 
 
 /*  st_attach()

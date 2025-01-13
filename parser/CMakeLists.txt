@@ -2,6 +2,7 @@
 add_executable(parser
     parse.c
     syntax_tree.c
+    parse_print.c
 )
 
 # 连接 scanner 和 semantic_analyzer 的静态库

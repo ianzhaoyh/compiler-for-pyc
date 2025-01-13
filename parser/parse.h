@@ -126,6 +126,7 @@ Bool canStartDeclaration(TokenType t);
 Bool looksLikeFunDeclaration(ParserInfo *f);
 void skipNewlines(ParserInfo *info);
 
+
 // 语法规则解析函数
 TreeNode *declaration_list(ParserInfo *f, Bool *status);
 TreeNode *declaration(ParserInfo *f, Bool *status);

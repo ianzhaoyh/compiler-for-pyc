@@ -2,6 +2,7 @@
 #include "../scanner_pyc/scanner.h"
 #include "parse.h"
 #include "util.h"
+#include "parse_print.h"
 
 TreeNode *parse(Parser *p)
 {
@@ -21,18 +22,52 @@ TreeNode *parse(Parser *p)
     }
     return tree;
 }
+void set_token_list(Parser *p, List tokenList) {
+    if (!p) {
+        fprintf(stderr, "[Error] Parser pointer is NULL.\n");
+        return;
+    }
 
-void set_token_list(Parser *p, List tokenList)
-{
-    if (!p->info)
-    {
+    if (!p->info) {
         p->info = malloc(sizeof(ParserInfo));
+        if (!p->info) {
+            fprintf(stderr, "[Error] Failed to allocate memory for ParserInfo.\n");
+            exit(1);
+        }
         memset(p->info, 0, sizeof(ParserInfo));
     }
+
+    ParserInfo *info = (ParserInfo *)p->info;
+
+    if (!tokenList.head) {
+        fprintf(stderr, "[Error] Token list is empty.\n");
+        return;
+    }
+
+    info->tokenList = tokenList;
+    info->currentTokenNode = tokenList.head;
+
+    fprintf(stderr, "[Debug] set_token_list: info=%p, currentTokenNode=%p\n", info, info->currentTokenNode);
+}
+/*void set_token_list(Parser *p, List tokenList)
+{
+    if (!p->info) {
+        p->info = malloc(sizeof(ParserInfo));
+        if (!p->info) {
+            fprintf(stderr, "Error: Failed to allocate memory for ParserInfo\n");
+            exit(1);
+        }
+        memset(p->info, 0, sizeof(ParserInfo));
+    }
+
     ParserInfo *info = (ParserInfo *)p->info;
     info->tokenList = tokenList;
     info->currentTokenNode = tokenList.head;
-}
+
+    if (!info->currentTokenNode) {
+        fprintf(stderr, "Error: Token list is empty!\n");
+    }
+}*/
 
 void free_tree(Parser *p, TreeNode *tree)
 {
@@ -53,11 +88,19 @@ Parser *createParser()
         fprintf(stderr, "Out of memory\n");
         exit(1);
     }
+    ParserInfo *info = (ParserInfo *)malloc(sizeof(ParserInfo));
+    if (!info) {
+        fprintf(stderr, "Out of memory for ParserInfo\n");
+        free(p);
+        exit(1);
+    }
+    info->currentTokenNode = NULL;  // 初始化为空
+    info->errorCount = 0;
     p->parse = parse;
     p->set_token_list = set_token_list;
     p->free_tree = free_tree;
-    p->info = NULL;
-    // p->print_tree = print_tree;
+    p->info = info;
+    p->print_tree = print_tree;
     return p;
 }
 void destroyParser(Parser *p)
@@ -95,49 +138,84 @@ Bool checkType(Token *token, TokenType type)
 
 Bool moveTokenNext(ParserInfo *info)
 {
-    if (info->currentTokenNode && info->currentTokenNode->next)
-    {
-        info->currentTokenNode = info->currentTokenNode->next;  // 移动到下一个 Node
-        return TRUE;
+    if (!info) {
+        fprintf(stderr, "Error: info is NULL\n");
+        return FALSE;
     }
-    return FALSE;  // 已经是最后一个节点
-} // 移动token链表的指针，指向下一个节点
+    
+    if (!info->currentTokenNode) {
+        fprintf(stderr, "Error: currentTokenNode is NULL\n");
+        return FALSE;
+    }
+
+    // 跳过 NEWLINE token
+    while (info->currentTokenNode && info->currentTokenNode->next) {
+        info->currentTokenNode = info->currentTokenNode->next;
+
+        // 如果当前 Token 不是 NEWLINE，停止跳过
+        if (info->currentTokenNode->t && info->currentTokenNode->t->type != NEWLINE) {
+            return TRUE;
+        }
+    }
+
+    return FALSE;  // 到达链表末尾
+}// 移动token链表的指针，指向下一个节点
 void skipNewlines(ParserInfo *info) {
-    while (currentToken(info) && currentToken(info)->type == NEWLINE) {
-        moveTokenNext(info);
+    if (!info) {
+        fprintf(stderr, "[Error] skipNewlines: info is NULL.\n");
+        return;
     }
-}
-Bool checkMove(ParserInfo *info, TokenType type)
-{
-    // 跳过 NEWLINE
-    while (info->currentTokenNode && info->currentTokenNode->t->type == NEWLINE)
-    {
+
+    if (!info->currentTokenNode) {
+        fprintf(stderr, "[Error] skipNewlines: currentTokenNode is NULL.\n");
+        return;
+    }
+
+    if (!info->currentTokenNode->t) {
+        fprintf(stderr, "[Error] skipNewlines: currentTokenNode->t is NULL.\n");
+        return;
+    }
+
+    fprintf(stderr, "[Debug] Entering skipNewlines, current token type: %d\n", info->currentTokenNode->t->type);
+
+    while (info->currentTokenNode && info->currentTokenNode->t) {
+        if (info->currentTokenNode->t->type != NEWLINE) {
+            break;
+        }
+        fprintf(stderr, "[Debug] Skipping NEWLINE token.\n");
         info->currentTokenNode = info->currentTokenNode->next;
     }
 
-    Token *t = info->currentTokenNode ? info->currentTokenNode->t : NULL;
-    if (t && t->type == type)
-    {
-        if (info->currentTokenNode && info->currentTokenNode->next)
-        {
-            info->currentTokenNode = info->currentTokenNode->next;
-
-            // 再次跳过 NEWLINE
-            while (info->currentTokenNode && info->currentTokenNode->t->type == NEWLINE)
-            {
-                info->currentTokenNode = info->currentTokenNode->next;
-            }
-
-            return TRUE;
-        }
-        else
-        {
-            info->currentTokenNode = NULL; // 已到最后一个 Token
-            return TRUE;
-        }
+    if (!info->currentTokenNode) {
+        fprintf(stderr, "[Error] skipNewlines: Reached end of token list.\n");
+    } else if (!info->currentTokenNode->t) {
+        fprintf(stderr, "[Error] skipNewlines: currentTokenNode->t is NULL after skipping.\n");
+    } else {
+        fprintf(stderr, "[Debug] Exiting skipNewlines, current token type: %d\n", info->currentTokenNode->t->type);
     }
+}
+/*void skipNewlines(ParserInfo *info) {
+    while (info && info->currentTokenNode && info->currentTokenNode->t->type == NEWLINE) {
+        info->currentTokenNode = info->currentTokenNode->next;
+    }
+}*/
+Bool checkMove(ParserInfo *info, TokenType type) {
+    if (!info || !info->currentTokenNode) {
+        fprintf(stderr, "Error: ParserInfo or currentTokenNode is NULL.\n");
+        return FALSE;
+    }
+
+    // 跳过 NEWLINE
+    skipNewlines(info);
+
+    Token *t = info->currentTokenNode->t;
+    if (t && t->type == type) {
+        moveTokenNext(info);
+        return TRUE;
+    }
+
     return FALSE;
-} // checkType+moveTokenNext，token类型匹配之后移动指针到下一个
+}// checkType+moveTokenNext，token类型匹配之后移动指针到下一个
 TreeNode *newNode(NodeKind nodeKind)
 {
     TreeNode *node = (TreeNode *)malloc(sizeof(TreeNode));
@@ -187,6 +265,7 @@ TreeNode *newNode(NodeKind nodeKind)
     node->something = NULL; // 额外字段（可选扩展）
     return node;
 }
+
 Bool canStartDeclaration(TokenType t)
 {
     return (t == INT || t == FRAC || t == VOID || t == DEF);
@@ -217,7 +296,6 @@ void removeNode(TreeNode *node)
  ***************************/
 /*program --> declaration-list*/
 
-/*declaration_list -> declaration_list declaration | declaration*/
 TreeNode *parse_program(Parser *p)
 {
     TreeNode *root = newNode(ROOT);
@@ -285,7 +363,7 @@ TreeNode *declaration(ParserInfo *f, Bool *status)
 TreeNode *var_declaration(ParserInfo *f, Bool *status)
 {
     TreeNode *node = newNode(DCL_ND);
-    Bool s;
+   // Bool s;
     Token *typeToken = currentToken(f);
     if (checkMove(f, INT) || checkMove(f, FRAC) || checkMove(f, VOID) || checkMove(f, STR))
     {
@@ -344,14 +422,14 @@ TreeNode *var_declaration(ParserInfo *f, Bool *status)
             }
         }
     }
-    printf("something wrong");
+    printf("something wrong in var_declaration");
     *status = FALSE;
     removeNode(node);
     return NULL;
 }
 /*fun-declaration --> type-specifier ID ( param-list ) compound-stmt | def ID (param-list): compound-stmt*/
 TreeNode *fun_declaration(ParserInfo *f, Bool *status)
-{
+{   skipNewlines(f);
     TreeNode *node = newNode(DCL_ND);
     node->kind.dcl = FUN_DCL;
     Bool s;
@@ -475,7 +553,7 @@ TreeNode *param_list(ParserInfo *f, Bool *status)
 TreeNode *param(ParserInfo *f, Bool *status)
 {
     TreeNode *node = newNode(PARAM_ND);
-    Bool s;
+    //Bool s;
     Token *typeToken = currentToken(f);
     if (checkType(typeToken, INT) || checkType(typeToken, FRAC) || checkType(typeToken, VOID) || checkType(typeToken, STR))
     {
@@ -1063,7 +1141,7 @@ TreeNode *relop(ParserInfo *f, Bool *status)
 {
     TreeNode *node = newNode(EXPR_ND);
     node->lineNum = currentToken(f)->lineNum;
-    Bool s;
+    //Bool s;
     Token *t = currentToken(f);
     if (checkMove(f, LT) || checkMove(f, LTE) || checkMove(f, GT) || checkMove(f, GTE) || checkMove(f, EQ) || checkMove(f, UNEQ))
     {   
@@ -1194,7 +1272,7 @@ TreeNode *mulop(ParserInfo *f, Bool *status)
     node->lineNum = currentToken(f)->lineNum;
 
     TokenType tp = currentToken(f)->type;
-    Bool s;
+    //Bool s;
     if (tp == MUL || tp == DIV)
     {
         node->attr.exprAttr.op = tp;      // 记录操作符类型 (* 或 /)
