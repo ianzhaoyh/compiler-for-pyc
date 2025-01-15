@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "symbol_table.h": "c",
+        "s_analyzer.h": "c",
+        "analyzer.h": "c"
+    }
+}

@@ -11,4 +11,4 @@ set(CMAKE_C_STANDARD 99)
 # 包含子目录
 add_subdirectory("parser")
 add_subdirectory("scanner_pyc")
-#add_subdirectory("semantic_analyzer")
+add_subdirectory("semantic_analyzer")

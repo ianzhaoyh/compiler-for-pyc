@@ -3,6 +3,7 @@
 #include "parse.h"
 #include "util.h"
 #include "parse_print.h"
+#include "../semantic_analyzer/symbol_table.h"
 
 TreeNode *parse(Parser *p)
 {

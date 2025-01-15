@@ -4,24 +4,45 @@
 #ifndef _S_ANALYZER_H_
 #define _S_ANALYZER_H_
 
-//#include "symbol_table.h"
+// #include "symbol_table.h"
 #include "analyzer.h"
 
 // the symbol table on the top level.
-//extern SymbTab * symbolTable;
+// extern SymbTab * symbolTable;
 
-/* Function buildSymtab constructs the symbol 
+/* Function buildSymtab constructs the symbol
  * table by preorder traversal of the syntax tree
  */
-//void build_symb_tab(TreeNode *);
+// void build_symb_tab(TreeNode *);
 
-/* Procedure typeCheck performs type checking 
+/* Procedure typeCheck performs type checking
  * by a postorder syntax tree traversal
  */
-//void type_check(TreeNode *);
+// void type_check(TreeNode *);
+typedef struct analyzerInfo
+{
+	SymbolTable *symbolTable; /* the symbol table on the top level. */
+	Bool analyzerError;		  /* When TRUE, some error is found the analyzer */
+	TreeNode *parseTree;	  /* the parse tree that the analyzer is working on*/
+} AnalyzerInfo;
 
 extern Bool A_debugAnalyzer;
 
-Analyzer * new_s_analyzer(TreeNode * parseTree);
+/*  build_symbol_table()
+    [Computation]:
+    - constructs the symbol table by preorder traversal of the parse-tree that is known by the analyzer.
+    - pre_proc is applied to each tree node.
+    */
+// void _table(AnalyzerInfo *info);
 
+Analyzer *new_s_analyzer(TreeNode *parseTree);
+
+// static void top_symbtb_initialize(AnalyzerInfo *info);
+void semantic_analysis(Analyzer *analyzer);
+static void pre_traverse(TreeNode *t, SymbolTable *st, Bool *errorFound, SymbolTable *(*pre_proc)(TreeNode *, SymbolTable *, Bool *));
+static void post_traverse(TreeNode *t, Bool *errorFound, void (*post_proc)(TreeNode *, Bool *));
+static SymbolTable *pre_proc(TreeNode *nd, SymbolTable *st, Bool *errorFound);
+static void post_proc(TreeNode *nd, Bool *errorFound);
+static void semantic_error(const TreeNode *nd, int errorNum, Bool *errorFound);
+static Bool is_keyword(const char *name);
 #endif

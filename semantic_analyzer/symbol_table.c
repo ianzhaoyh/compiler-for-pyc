@@ -12,6 +12,7 @@
 
 #include "../parser/parse.h"
 #include "symbol_table.h"
+Bool A_debugAnalyzer = FALSE;
 
 /* SHIFT is the power of two used as multiplier in hash function  */
 #define SHIFT 4
@@ -32,8 +33,8 @@ static int hash( const char * key ){
 
 
 /* The "something" field in a tree node has the following meaning: 
-  - for a declaration node, something is a pointer to the bucket-list-record in the symbol table. 
-  - for a reference node (where a name is used), something is a pointer to the line-list-record int he symbol table. 
+  - for a declaration node, something is a pointer to the bucket-list-record in the symbol table. 声明节点的sth只想bucket-list-record
+  - for a reference node (where a name is used), something is a pointer to the line-list-record int he symbol table. 引用节点的sth指向line-list-record
   - for other kind of nodes, the something field is meaningless and should not be used 
  */
 /* st_insert_dcl():
@@ -56,7 +57,26 @@ static int hash( const char * key ){
  
 void st_insert_dcl(TreeNode *dclNd, SymbolTable *st){
 /* !!!!!!!!! Please put your code here !!!!!!!!!!!!! */
-	
+     if (dclNd == NULL || st == NULL)
+    {
+        fprintf(stderr, "st_insert_dcl(): invalid parameter\n");
+        return;
+    }
+	 BucketList bk = (BucketList)malloc(sizeof(struct BucketListRec));
+	  if (!bk) {
+        fprintf(stderr, "st_insert_dcl(): out of memory\n");
+        exit(1);
+    }
+	 bk->st=st;
+	 bk->lines=NULL;
+	 bk->prev=NULL;
+	 bk->next=NULL;
+
+     int v = hash(dclNd->attr.dclAttr.name);
+	 bk->next=st->hashTable[v]; //头插法
+	 st->hashTable[v]=bk;
+	 dclNd->something=bk;
+	 bk->nd=dclNd;
 }
 
 
@@ -77,7 +97,36 @@ void st_insert_dcl(TreeNode *dclNd, SymbolTable *st){
  --------------*/
 void  st_insert_ref(TreeNode *refNd, struct BucketListRec* bk){
 /* !!!!!!!!! Please put your code here !!!!!!!!!!!!! */
+    if(refNd == NULL || bk == NULL)
+	{
+		fprintf(stderr, "st_insert_ref(): invalid parameter\n");
+		return;
+	}
+	LineList ll=(LineList)malloc(sizeof(struct LineListRec));
+	if(!ll)
+	{
+		fprintf(stderr, "st_insert_ref(): out of memory\n");
+		exit(1);
+	}
 
+	ll->nd=refNd;
+	ll->next=NULL;
+	if(bk->lines==NULL) //尾插法 按照顺序引用
+	{
+		bk->lines=ll;
+	}
+	else
+	{
+		LineList tempLineList=bk->lines;
+		while(tempLineList->next!=NULL)
+		{
+			tempLineList=tempLineList->next;
+		}
+		tempLineList->next=ll;
+	}
+	
+	refNd->something=ll;
+    return;
 }
 
 
@@ -97,7 +146,26 @@ void  st_insert_ref(TreeNode *refNd, struct BucketListRec* bk){
  */
 struct BucketListRec*  st_lookup (SymbolTable* st,  const char * name ){
 /* !!!!!!!!! Please put your code here !!!!!!!!!!!!! */
-
+    if(name == NULL || st == NULL){
+		fprintf(stderr, "st_lookup(): invalid parameter\n");
+		return NULL;
+	}
+	int v = hash(name);
+	while(st!=NULL)
+	{
+	BucketList tempBucketList=st->hashTable[v];
+	while(tempBucketList!=NULL)
+	{
+		if(strcmp(tempBucketList->nd->attr.dclAttr.name,name)==0)
+		{
+			return tempBucketList;
+		}
+		tempBucketList=tempBucketList->next;
+	}
+	
+		st=st->upper;
+	}
+	return NULL;
 }
 
 /* st_print():
@@ -175,7 +243,7 @@ void st_print( SymbolTable* st){
     If the parameter restart is TRUE, then the id of the symbol table is 0, otherwise,
    the id of the symbol table is accumulating (one plus the latest value ).
  */
-SymbolTable*  st_initialize(Bool restart){
+SymbolTable*  st_initialize(Bool restart){ //创建并返回一个初始化好的、空的符号表结构。
 	int i;
 	SymbolTable* tab;
 	/* A counter of the tables. This number will increase each time a table is created. */
@@ -199,7 +267,7 @@ SymbolTable*  st_initialize(Bool restart){
 	for(i = 0; i<ST_SIZE; i++)
 		tab->hashTable[i] = NULL;
 	return tab;
-}
+} 
 
 /*  st_attach()
     [computation]: 
@@ -207,7 +275,7 @@ SymbolTable*  st_initialize(Bool restart){
     - Returns the pointer to the newly added empty symbol table.     
     [Precondition]: st is not NULL
  */
-SymbolTable * st_attach(SymbolTable* st){
+SymbolTable * st_attach(SymbolTable* st){ //给某个符号表 st 添加一个新的子符号表，并返回新建的子符号表的指针
 	SymbolTable* newSt = st_initialize(FALSE);
 	SymbolTable* last = st->lower;
 
@@ -246,7 +314,7 @@ static void BucketList_free(BucketList lis){
 /* stj_free()
  * release the space occupied by a symbol table
  */
-void st_free(SymbolTable * st){
+void st_free(SymbolTable * st){ //释放（递归回收）符号表 st 及其所有相关资源。
 	int j;
 	if(st == NULL)
 		return;

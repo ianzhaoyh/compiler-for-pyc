@@ -5,6 +5,7 @@
 #include "../scanner_pyc/scanner.h"
 #include "libs.h"
 
+typedef struct symbolTable SymbolTable;
 // No need for ARG_ND, since an argument is just an expression
 
 /* Naming convention. If the word is no more than 5 character use the full word, like param, array, otherwise use, 3 characters, like varaible -> var, assign -> asn.
@@ -38,7 +39,6 @@ typedef enum {VOID_TYPE, INT_TYPE, FRAC_TYPE,STR_TYPE} ExprType;
 /* changed MAX_CHILDREN from 3 to 4 */
 #define MAX_CHILDREN 4
 
-
 /**************************************************/
 /***********   Syntax tree for parsing ************/
 /************************** ************************/
@@ -65,11 +65,15 @@ typedef struct treeNode {
       const char * name;  // used by all dcl and param
       int size;     // used by array declaration
       /* size is only used for and array declaration; i.e., when  Dcl_Kind is Array_DCL. The requirement that size must be a constant should be checked by semantic analyzer.   For parameters, for Array_PARAM, size is ignored. For array element argument, the index is a child of the node, and should not be considered as dclAttr. */
+      //SymbolTable* symbol;
+      Token* token;
     } dclAttr; // for declaration and parameters.
   }attr;
   ExprType type;
   /* type is for type-checking of exps, will be updated by type-checker,  the parser does not touch it.  */
+  Token * token; // the token that the node represents
   void * something; //can carry something possibly useful for other tasks of compiling
+  SymbolTable * symbol; // the symbol table that the node represents
 } TreeNode;
 
 /*  Not the best design

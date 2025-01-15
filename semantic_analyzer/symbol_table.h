@@ -2,6 +2,7 @@
 #define _SYMBOL_TABLE_H_
 #include "../parser/parse.h"
 
+
 /* ST_SIZE is the size of the hash table, usually a prime number */
 /*#define SIZE 211 */
 /* assuming commonly there are no more than 71 declarations in a block of the program.

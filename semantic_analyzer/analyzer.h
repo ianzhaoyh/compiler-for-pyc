@@ -33,6 +33,8 @@ struct analyzer{
 	                including the parse-tree, the symbol-table, and the flag of whether error is found
 	                by the semantic analyzer */
 };
+Analyzer *new_s_analyzer(TreeNode *parseTree);
+void destroyAnalyzer(Analyzer *self);
 
 
 #endif /* _ANALYZER_H_ */
