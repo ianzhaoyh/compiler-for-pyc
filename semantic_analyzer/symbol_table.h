@@ -1,5 +1,6 @@
 #ifndef _SYMBOL_TABLE_H_
 #define _SYMBOL_TABLE_H_
+
 #include "../parser/parse.h"
 
 
@@ -34,7 +35,7 @@ typedef struct BucketListRec
 } * BucketList;
 
 
-typedef struct symbolTable SymbolTable;
+//typedef struct symbolTable SymbolTable;
 struct symbolTable{
 	int id;
 	TreeNode * nd;

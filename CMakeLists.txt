@@ -12,3 +12,4 @@ set(CMAKE_C_STANDARD 99)
 add_subdirectory("parser")
 add_subdirectory("scanner_pyc")
 add_subdirectory("semantic_analyzer")
+

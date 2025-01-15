@@ -1,6 +1,5 @@
-#include "util.h"
 #include "../scanner_pyc/scanner.h"
-#include "parse.h"
+#include "../parser/parse.h"
 #include "s_analyzer.h"
 #include "symbol_table.h"
 
@@ -25,25 +24,6 @@ TreeNode *new_param_node(NodeKind kind, int lineno)
 	return node;
 }
 
-TreeNode *newNode(NodeKind kind)
-{
-	TreeNode *node = (TreeNode *)malloc(sizeof(TreeNode));
-	if (node == NULL)
-	{
-		fprintf(stderr, "Out of memory error\n");
-		exit(EXIT_FAILURE);
-	}
-	node->nodeKind = kind;
-	node->lineNum = 0;
-	// 初始化其他字段
-	for (int i = 0; i < MAX_CHILDREN; i++)
-		node->child[i] = NULL;
-	node->lSibling = NULL;
-	node->rSibling = NULL;
-	node->attr.dclAttr.name = NULL;
-	return node;
-}
-
 /*  top_symbtb_initialize(void)
 	[Computation]:
 	- initialize the top-level symbol table and save it in the info of the analyzer, which is a parameter
@@ -56,7 +36,7 @@ TreeNode *newNode(NodeKind kind)
    This function must be called before any other symbol table is initialized, and it should only be called once during the whole program.
  */
 
-static void top_symbtb_initialize(AnalyzerInfo *info)
+void top_symbtb_initialize(AnalyzerInfo *info)
 {    if (!info) {
         fprintf(stderr, "[Error] AnalyzerInfo is NULL.\n");
         exit(EXIT_FAILURE);
@@ -66,9 +46,9 @@ static void top_symbtb_initialize(AnalyzerInfo *info)
 	info->symbolTable = st_initialize(TRUE); /* create an empty symbol table with id 0 */
 
 	/* add the read(), write(), and print() functions. Assume they appear at line 0. */
-	TreeNode *readNd = newNode(FUN_DCL);
-	TreeNode *writeNd = newNode(FUN_DCL);
-	TreeNode *printNd = newNode(FUN_DCL);
+	TreeNode *readNd = newNode(DCL_ND);
+	TreeNode *writeNd = newNode(DCL_ND);
+	TreeNode *printNd = newNode(DCL_ND);
 	if (readNd == NULL || writeNd == NULL || printNd == NULL)
 	{
 		fprintf(stderr, "Out of memory error\n");
@@ -88,11 +68,11 @@ static void top_symbtb_initialize(AnalyzerInfo *info)
 	readNd->attr.dclAttr.name = "read";
 	writeNd->attr.dclAttr.name = "write";
 
-	TreeNode *p1 = new_param_node(VOID_PARAM, 0);
+	TreeNode *p1 = new_param_node(PARAM_ND, 0);
 	p1->attr.dclAttr.type = VOID_TYPE;
 	p1->attr.dclAttr.name = "void"; /* this is not required */
 
-	TreeNode *p2 = new_param_node(VAR_PARAM, 0);
+	TreeNode *p2 = new_param_node(PARAM_ND, 0);
 	if (nd->child[0]->type != INT_TYPE)
 	{
 		p2->attr.dclAttr.type = INT_TYPE;
@@ -103,7 +83,7 @@ static void top_symbtb_initialize(AnalyzerInfo *info)
 	}
 	p2->attr.dclAttr.name = "x";
 
-	TreeNode *p3 = new_param_node(VAR_PARAM, 0);
+	TreeNode *p3 = new_param_node(PARAM_ND, 0);
 	p3->attr.dclAttr.type = STR_TYPE;
 	p3->attr.dclAttr.name = "y";
 
@@ -122,7 +102,7 @@ static void top_symbtb_initialize(AnalyzerInfo *info)
 	[Preconditions]:
 	- st is not NULL.
  */
-static void pre_traverse(TreeNode *t, SymbolTable *st, Bool *errorFound, SymbolTable *(*pre_proc)(TreeNode *, SymbolTable *, Bool *))
+void pre_traverse(TreeNode *t, SymbolTable *st, Bool *errorFound, SymbolTable *(*pre_proc)(TreeNode *, SymbolTable *, Bool *))
 {
 	if (A_debugAnalyzer)
 		printf("%20s \n", __FUNCTION__);
@@ -139,7 +119,7 @@ static void pre_traverse(TreeNode *t, SymbolTable *st, Bool *errorFound, SymbolT
 	[Computation]:
 	- It is a generic recursive syntax tree traversal routine: it applies post_proc in post-order to the tree pointed to by t.
  */
-static void post_traverse(TreeNode *t, Bool *errorFound, void (*post_proc)(TreeNode *, Bool *))
+void post_traverse(TreeNode *t, Bool *errorFound, void (*post_proc)(TreeNode *, Bool *))
 {
 	if (A_debugAnalyzer)
 		printf("%20s \n", __FUNCTION__);
@@ -152,7 +132,7 @@ static void post_traverse(TreeNode *t, Bool *errorFound, void (*post_proc)(TreeN
 	}
 }
 
-static Bool is_keyword(const char *name)
+Bool is_keyword(const char *name)
 {
 	if (A_debugAnalyzer)
 		printf("%20s \n", __FUNCTION__);
@@ -184,7 +164,7 @@ static Bool is_keyword(const char *name)
 [Return]
    - If a new symbol table is attached, return it. Otherwise, return the parameter st.
  */
-static SymbolTable *pre_proc(TreeNode *nd, SymbolTable *st, Bool *errorFound)
+SymbolTable *pre_proc(TreeNode *nd, SymbolTable *st, Bool *errorFound)
 {
 	if (A_debugAnalyzer)
 		printf("%20s \n", __FUNCTION__);
@@ -344,7 +324,7 @@ void post_proc(TreeNode *nd, Bool *errorFound)
 		{
 		case ASN_EXPR:
 			// 检查赋值表达式的左右类型是否匹配
-			if (!checkType(nd->attr.dclAttr.token, nd->attr.dclAttr.type))
+			if (!checkType(nd->attr.dclAttr.token, nd->attr.exprAttr.op))
 			{
 				printf("Error: Type mismatch in assignment at line %d\n", nd->lineNum);
 			}
@@ -370,7 +350,7 @@ void post_proc(TreeNode *nd, Bool *errorFound)
 		{
 		case RTN_STMT:
 			// 检查返回语句的类型是否正确
-			if (!checkType(nd->token, nd->type))
+			if (!checkType(nd->token, RETURN))
 			{
 				printf("Error: Type mismatch in return statement at line %d\n", nd->lineNum);
 			}
@@ -392,23 +372,27 @@ void post_proc(TreeNode *nd, Bool *errorFound)
 	- constructs the symbol table by preorder traversal of the parse-tree that is known by the analyzer.
 	- pre_proc is applied to each tree node.
  */
-void build_symbol_table(AnalyzerInfo *info)
-{
-	if (A_debugAnalyzer)
-		printf("%20s \n", __FUNCTION__);
-	/*initialize the symbol_table */
-	top_symbtb_initialize(info);
-	pre_traverse(info->parseTree, info->symbolTable, &(info->analyzerError), pre_proc);
+void build_symbol_table(Analyzer *self) {
+    AnalyzerInfo *info = (AnalyzerInfo *)self->info;
+    if (!info->parseTree) {
+        fprintf(stderr, "Error: Parse tree not set.\n");
+        return;
+    }
+    top_symbtb_initialize(info);
+    pre_traverse(info->parseTree, info->symbolTable, &info->analyzerError, pre_proc);
 }
+
 
 /* type_check()
    [Computation]:
    - type_check performs type checking by a post-order traversal on the parse-tree of an analyzer.
    - post_proc is applied to each tree node.
  */
-void type_check(AnalyzerInfo *info)
-{
-	if (A_debugAnalyzer)
-		printf("%20s \n", __FUNCTION__);
-	post_traverse(info->parseTree, &(info->analyzerError), post_proc);
+void type_check(Analyzer *self) {
+    AnalyzerInfo *info = (AnalyzerInfo *)self->info;
+    if (!info->parseTree) {
+        fprintf(stderr, "Error: Parse tree not set.\n");
+        return;
+    }
+    post_traverse(info->parseTree, &info->analyzerError, post_proc);
 }

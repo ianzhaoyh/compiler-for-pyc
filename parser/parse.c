@@ -1,7 +1,6 @@
 #include "libs.h"
 #include "../scanner_pyc/scanner.h"
 #include "parse.h"
-#include "util.h"
 #include "parse_print.h"
 #include "../semantic_analyzer/symbol_table.h"
 

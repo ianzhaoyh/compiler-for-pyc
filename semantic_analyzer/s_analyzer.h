@@ -6,6 +6,7 @@
 
 // #include "symbol_table.h"
 #include "analyzer.h"
+extern Bool A_debugAnalyzer;
 
 // the symbol table on the top level.
 // extern SymbTab * symbolTable;
@@ -37,12 +38,14 @@ extern Bool A_debugAnalyzer;
 
 Analyzer *new_s_analyzer(TreeNode *parseTree);
 
-// static void top_symbtb_initialize(AnalyzerInfo *info);
-void semantic_analysis(Analyzer *analyzer);
-static void pre_traverse(TreeNode *t, SymbolTable *st, Bool *errorFound, SymbolTable *(*pre_proc)(TreeNode *, SymbolTable *, Bool *));
-static void post_traverse(TreeNode *t, Bool *errorFound, void (*post_proc)(TreeNode *, Bool *));
-static SymbolTable *pre_proc(TreeNode *nd, SymbolTable *st, Bool *errorFound);
-static void post_proc(TreeNode *nd, Bool *errorFound);
-static void semantic_error(const TreeNode *nd, int errorNum, Bool *errorFound);
-static Bool is_keyword(const char *name);
+void top_symbtb_initialize(AnalyzerInfo *info);
+//void semantic_analysis(Analyzer *analyzer);
+ void pre_traverse(TreeNode *t, SymbolTable *st, Bool *errorFound, SymbolTable *(*pre_proc)(TreeNode *, SymbolTable *, Bool *));
+ void post_traverse(TreeNode *t, Bool *errorFound, void (*post_proc)(TreeNode *, Bool *));
+ SymbolTable *pre_proc(TreeNode *nd, SymbolTable *st, Bool *errorFound);
+void post_proc(TreeNode *nd, Bool *errorFound);
+//void semantic_error(const TreeNode *nd, int errorNum, Bool *errorFound);
+Bool is_keyword(const char *name);
+void type_check(Analyzer *self);
+void build_symbol_table(Analyzer* self);
 #endif

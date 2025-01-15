@@ -4,31 +4,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-void  build_symbol_table(Analyzer * self){
-    AnalyzerInfo *info = (AnalyzerInfo *)self->info;
-    if (!info->parseTree) {
-        fprintf(stderr, "Error: Parse tree not set.\n");
-        return;
-    }
-    top_symbtb_initialize(info);
-    pre_traverse(info->parseTree, info->symbolTable, &info->analyzerError, pre_proc);
-}
 	/* returns the symbol table that is built by the semantic analyzer */
     SymbolTable * get_symbol_table(Analyzer * self){
         AnalyzerInfo *info = (AnalyzerInfo *)self->info;
         return info->symbolTable;
     }
-	 void type_check(Analyzer * self){
-        AnalyzerInfo *info = (AnalyzerInfo *)self->info;
-
-    if (!info->parseTree) {
-        fprintf(stderr, "Error: Parse tree not set.\n");
-        return;
-    }
-
-    post_traverse(info->parseTree, &info->analyzerError, post_proc);
-}
     
 	/* Using a function to access the internal data (error information) known by the analyzer
 	 * Returning TRUE means semantic error is found*/
@@ -42,7 +22,7 @@ void  build_symbol_table(Analyzer * self){
     void clear(Analyzer *self) {
     AnalyzerInfo *info = (AnalyzerInfo *)self->info;
     if (info) {
-        st_destroy(info->symbolTable);
+        st_free(info->symbolTable);
         free(info);
         self->info = NULL;
     }

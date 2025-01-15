@@ -8,11 +8,10 @@
  Provided by Zhiyao Liang
  MUST compiler  2024 Fall
  ****************************************************/
-
-
 #include "../parser/parse.h"
 #include "symbol_table.h"
-Bool A_debugAnalyzer = FALSE;
+#include "s_analyzer.h"
+
 
 /* SHIFT is the power of two used as multiplier in hash function  */
 #define SHIFT 4
@@ -243,6 +242,15 @@ void st_print( SymbolTable* st){
     If the parameter restart is TRUE, then the id of the symbol table is 0, otherwise,
    the id of the symbol table is accumulating (one plus the latest value ).
  */
+void *checked_malloc(size_t size) {
+    void *ptr = malloc(size);
+    if (ptr == NULL) {
+        fprintf(stderr, "Out of memory!\n");
+        exit(EXIT_FAILURE);
+    }
+    return ptr;
+}
+
 SymbolTable*  st_initialize(Bool restart){ //创建并返回一个初始化好的、空的符号表结构。
 	int i;
 	SymbolTable* tab;

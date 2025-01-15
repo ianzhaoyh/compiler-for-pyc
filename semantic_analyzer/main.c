@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 
     // 6. 释放资源
     analyzer->clear(analyzer);   // 清空语义分析器数据
-    destroy_analyzer(analyzer);  // 销毁语义分析器
+    destroyAnalyzer(analyzer);  // 销毁语义分析器
 
     parser->free_tree(parser, syntaxTree);  // 释放语法树
     destroyParser(parser);                  // 销毁解析器

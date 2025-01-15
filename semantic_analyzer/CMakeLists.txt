@@ -1,7 +1,7 @@
 # 设置 semantic_analyzer 可执行文件
 add_executable(semantic_analyzer
-    main.c
     analyzer.c
+    main.c
     s_analyzer.c
     symbol_table.c
 ) # 编译 main.c、analyzer.c、s_analyzer.c、symbol_table.c 生成可执行文件 semantic_analyzer

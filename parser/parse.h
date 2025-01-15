@@ -4,8 +4,11 @@
 
 #include "../scanner_pyc/scanner.h"
 #include "libs.h"
-
+//#include "../semantic_analyzer/symbol_table.h"
 typedef struct symbolTable SymbolTable;
+
+
+
 // No need for ARG_ND, since an argument is just an expression
 
 /* Naming convention. If the word is no more than 5 character use the full word, like param, array, otherwise use, 3 characters, like varaible -> var, assign -> asn.
